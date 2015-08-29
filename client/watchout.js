@@ -115,18 +115,30 @@ var makePlayer = function() {
       .attr('cy', playerInstance.data.y)
       .attr('r', 10)
       .attr('fill', playerInstance.data.fill)
+
+    console.log(gameBoard.select('.player'));
+  
+    var drag = d3.behavior.drag()
+      .on('drag', function() { 
+        gameBoard.select(".player").attr('cx', d3.event.x)
+                                   .attr('cy', d3.event.y);
+      });
+
+    gameBoard.select('.player').call(drag);
+
+
   };
 
-  function mover () {
-    d3.select('.player')
-      .attr("x", d3.event.x - parseInt(d3.select(".player").attr("width")) / 2)
-      .attr("y", d3.event.y - parseInt(d3.select('.player').attr("height")) / 2);
-  }
+  // function mover () {
+  //   d3.select('.player')
+  //     .attr("x", d3.event.x - parseInt(d3.select(".player").attr("width")) / 2)
+  //     .attr("y", d3.event.y - parseInt(d3.select('.player').attr("height")) / 2);
+  // }
 
-  var drag = d3.behavior.drag()
-                .on('drag', mover);
+  // var drag = d3.behavior.drag()
+  //               .on('drag', mover);
 
-  d3.select('.player').call(drag);
+
 
   return playerInstance;
 }
