@@ -31,6 +31,7 @@ var axes = {
     this.id = id;
     this.x = Math.random()*100;
     this.y = Math.random()*100;
+    this.r = 15;
   };
 
 // Returns an array of enemy objects
@@ -51,15 +52,18 @@ function renderEnemies(enemyData) {
   var enemies = gameBoard.selectAll('circle.enemy') // should this be dot?
     .data(enemyData, function(d) {return d.id;});
 
-  console.log(enemies);
-
-  // Render enemies to board
+  // Render enemies to board initially
   enemies.enter()
       .append('circle')
       .attr('class', 'enemy') // create css
-      .attr('cx', function(d) {return axes.x(d.x);})
-      .attr('cy', function(d) {return axes.y(d.y);})
-      .attr('r', 15);
+      .attr('r', function(d) {return d.r;});
+
+  // Update all enemies
+  enemies
+    .transition()
+    .duration(2000)
+    .attr('cx', function(d) {return axes.x(d.x);})
+    .attr('cy', function(d) {return axes.y(d.y);});
 
   // Remove enemies from board
   enemies.exit()
@@ -69,23 +73,20 @@ function renderEnemies(enemyData) {
 // Moves all enemies
 function moveEnemies() {
 
-  var enemies = gameBoard.selectAll('circle.enemy');
-  // Animate move from old position to new position
-  enemies.transition()
-    .duration(2000)
-    .attr('cx', function(d) {return axes.x(Math.random()*100);})
-    .attr('cy', function(d) {return axes.y(Math.random()*100);});
+  // var enemies = gameBoard.selectAll('circle.enemy');
+  // // Animate move from old position to new position
+  // enemies.transition()
+  //   .duration(2000)
+  //   .attr('cx', function(d) {return axes.x(Math.random()*100);})
+  //   .attr('cy', function(d) {return axes.y(Math.random()*100);});
 
-  console.log(enemies);
+  for (var i = 0; i < newEnemyPositions.length; i++) {
+    // Update the x and y coordinate of each enemy data
+    newEnemyPositions[i].x = Math.random()*100;
+    newEnemyPositions[i].y = Math.random()*100;
+  }
 
-  // for (var i = 0; i < newEnemyPositions.length; i++) {
-
-  //   // Update the x and y coordinate of each enemy
-  //   newEnemyPositions[i].x = Math.random()*100;
-  //   newEnemyPositions[i].y = Math.random()*100;
-  // }
-
-  // renderEnemies(newEnemyPositions);
+  renderEnemies(newEnemyPositions);
 }
 
 // Define player class - functional
@@ -126,21 +127,23 @@ var makePlayer = function() {
 
     gameBoard.select('.player').call(drag);
 
-
   };
 
-  // function mover () {
-  //   d3.select('.player')
-  //     .attr("x", d3.event.x - parseInt(d3.select(".player").attr("width")) / 2)
-  //     .attr("y", d3.event.y - parseInt(d3.select('.player').attr("height")) / 2);
-  // }
-
-  // var drag = d3.behavior.drag()
-  //               .on('drag', mover);
-
-
-
   return playerInstance;
+}
+
+// Check for player enemy collision
+var checkCollision = function(enemies, player, callback) {
+  enemies.forEach(function(enemy) {
+    var radiusSum = enemy.r + parseFloat(player.attr('r'));
+    xDiff = axes.x(enemy.x) - parseFloat(player.attr('cx'));
+    yDiff = axes.y(enemy.y) - parseFloat(player.attr('cy'));
+
+    var separation = Math.sqrt( Math.pow(xDiff,2) + Math.pow(yDiff,2));
+    if (separation < radiusSum) {
+      callback(player, enemy); 
+    }
+  });
 }
 
 
@@ -156,6 +159,12 @@ renderEnemies(newEnemyPositions);
 var newPlayer = makePlayer();
 newPlayer.renderPlayer();
 
-// // Move the enemies 
-// setInterval(moveEnemies, 1500);
+// Check for collision every 200 ms
+setInterval(function() {
+  var player = gameBoard.select('.player');
+  checkCollision(newEnemyPositions, player, function(){console.log("collided");});
+}, 200)
+
+//Move the enemies 
+setInterval(moveEnemies, 1500);
 
