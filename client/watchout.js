@@ -51,9 +51,11 @@ function renderEnemies(enemyData) {
   var enemies = gameBoard.selectAll('circle.enemy') // should this be dot?
     .data(enemyData, function(d) {return d.id;});
 
+  console.log(enemies);
+
   // Render enemies to board
   enemies.enter()
-    .append('circle')
+      .append('circle')
       .attr('class', 'enemy') // create css
       .attr('cx', function(d) {return axes.x(d.x);})
       .attr('cy', function(d) {return axes.y(d.y);})
@@ -64,8 +66,84 @@ function renderEnemies(enemyData) {
     .remove()
 };
 
-// Play the game
+// Moves all enemies
+function moveEnemies() {
+
+  var enemies = gameBoard.selectAll('circle.enemy');
+  // Animate move from old position to new position
+  enemies.transition()
+    .duration(2000)
+    .attr('cx', function(d) {return axes.x(Math.random()*100);})
+    .attr('cy', function(d) {return axes.y(Math.random()*100);});
+
+  console.log(enemies);
+
+  // for (var i = 0; i < newEnemyPositions.length; i++) {
+
+  //   // Update the x and y coordinate of each enemy
+  //   newEnemyPositions[i].x = Math.random()*100;
+  //   newEnemyPositions[i].y = Math.random()*100;
+  // }
+
+  // renderEnemies(newEnemyPositions);
+}
+
+// Define player class - functional
+
+var makePlayer = function() {
+  // Make player instance object
+  var playerInstance = {};
+
+  playerInstance.data = {
+    fill: '#ff6600',
+    x: 350,
+    y: 250
+  }
+
+  // Render player method
+  playerInstance.renderPlayer = function() {
+    // Bind player data to player SVG element
+    // var player = gameBoard.select('circle.player')
+      // .data(playerInstance.data);
+
+
+    // Render player to board
+    gameBoard
+      .append('circle')
+      .attr('class', 'player') // create css
+      .attr('cx', playerInstance.data.x)
+      .attr('cy', playerInstance.data.y)
+      .attr('r', 10)
+      .attr('fill', playerInstance.data.fill)
+  };
+
+  function mover () {
+    d3.select('.player')
+      .attr("x", d3.event.x - parseInt(d3.select(".player").attr("width")) / 2)
+      .attr("y", d3.event.y - parseInt(d3.select('.player').attr("height")) / 2);
+  }
+
+  var drag = d3.behavior.drag()
+                .on('drag', mover);
+
+  d3.select('.player').call(drag);
+
+  return playerInstance;
+}
+
+
+
+/*****************/
+/* PLAY THE GAME */
+/*****************/
+
+// Start the game
 var newEnemyPositions = createEnemies();
 renderEnemies(newEnemyPositions);
 
+var newPlayer = makePlayer();
+newPlayer.renderPlayer();
+
+// // Move the enemies 
+// setInterval(moveEnemies, 1500);
 
