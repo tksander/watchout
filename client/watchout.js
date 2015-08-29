@@ -11,7 +11,8 @@ var gameOptions = {
 
 var gameStats = {
   score: 0,
-  bestScore: 0
+  bestScore: 0,
+  collisions: 0
 };
 
 // Create gameboard
@@ -31,7 +32,7 @@ var axes = {
     this.id = id;
     this.x = Math.random()*100;
     this.y = Math.random()*100;
-    this.r = 15;
+    this.r = 20;
   };
 
 // Returns an array of enemy objects
@@ -49,21 +50,28 @@ function createEnemies() {
 // Render enemies
 function renderEnemies(enemyData) {
   // Bind enemy data to enemy SVG elements
-  var enemies = gameBoard.selectAll('circle.enemy') // should this be dot?
+  var enemies = gameBoard.selectAll('.enemy') // should this be dot?
     .data(enemyData, function(d) {return d.id;});
 
   // Render enemies to board initially
   enemies.enter()
-      .append('circle')
+      .append('svg:image')
+      .attr("xlink:href", "star.svg")
+      .attr("width", 40)
+      .attr("height", 40)
       .attr('class', 'enemy') // create css
-      .attr('r', function(d) {return d.r;});
+      .attr('r', function(d) {return d.r;})
+      .attr("transform", function(d) {return "rotate(-65)" });
+
 
   // Update all enemies
   enemies
     .transition()
     .duration(2000)
-    .attr('cx', function(d) {return axes.x(d.x);})
-    .attr('cy', function(d) {return axes.y(d.y);});
+    .attr('x', function(d) {return axes.x(d.x);})
+    .attr('y', function(d) {return axes.y(d.y);});
+
+
 
   // Remove enemies from board
   enemies.exit()
@@ -73,7 +81,7 @@ function renderEnemies(enemyData) {
 // Moves all enemies
 function moveEnemies() {
 
-  // var enemies = gameBoard.selectAll('circle.enemy');
+  // var enemies = gameBoard.selectAll('.enemy');
   // // Animate move from old position to new position
   // enemies.transition()
   //   .duration(2000)
@@ -117,7 +125,6 @@ var makePlayer = function() {
       .attr('r', 10)
       .attr('fill', playerInstance.data.fill)
 
-    console.log(gameBoard.select('.player'));
   
     var drag = d3.behavior.drag()
       .on('drag', function() { 
@@ -146,7 +153,41 @@ var checkCollision = function(enemies, player, callback) {
   });
 }
 
+// Update node score text
+function updateScore() {
+  d3.select('#current-score')
+    .text(gameStats.score.toString());
+};
 
+// Update node best score text
+function updateBestScore() {
+  gameStats.bestScore = 
+    Math.max(gameStats.bestScore, gameStats.score);
+
+    d3.select('#best-score')
+      .text(gameStats.bestScore.toString());
+};
+
+function updateCollisions() {
+  gameStats.collisions += 1;
+
+  d3.select('#total-collisions')
+    .text(gameStats.collisions.toString());
+}
+
+// Update best score and score on collision
+function onCollision() {
+  updateBestScore();
+  gameStats.score = 0;
+  updateScore();
+  updateCollisions();
+};
+
+// Increment score and update the score
+function increaseScore() {
+  gameStats.score += 1;
+  updateScore();
+};
 
 /*****************/
 /* PLAY THE GAME */
@@ -159,12 +200,15 @@ renderEnemies(newEnemyPositions);
 var newPlayer = makePlayer();
 newPlayer.renderPlayer();
 
-// Check for collision every 200 ms
+// Check for collision every 100 ms
 setInterval(function() {
   var player = gameBoard.select('.player');
-  checkCollision(newEnemyPositions, player, function(){console.log("collided");});
-}, 200)
+  checkCollision(newEnemyPositions, player, onCollision);
+}, 100)
 
-//Move the enemies 
-setInterval(moveEnemies, 1500);
+// Increase score
+setInterval(increaseScore, 50);
+
+// //Move the enemies 
+// setInterval(moveEnemies, 1500);
 
