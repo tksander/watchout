@@ -210,5 +210,5 @@ setInterval(function() {
 setInterval(increaseScore, 50);
 
 // //Move the enemies 
-// setInterval(moveEnemies, 1500);
+ setInterval(moveEnemies, 1500);
 
